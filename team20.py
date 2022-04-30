@@ -36,7 +36,7 @@ def calculate_pattern(guess, true):
 
     return tuple(pattern)
 
-
+#做這花19秒，但只會做一次
 def generate_pattern_dict(dictionary):
     """For each word and possible information returned, store a list
     of candidate words
@@ -130,7 +130,6 @@ def main():
             guess_word = max(entropies.items(), key=lambda x: x[1])[0]
             info = calculate_pattern(guess_word, WORD_TO_GUESS)
 
-            round = str(n_round)
 
             g.append(guess_word);
 
@@ -145,7 +144,7 @@ def main():
                     print(times + '; ' + g[i] + '; "', end="", file=f)
                     print(*t[i], sep=",", end="", file=f)
                     print('"', file=f)
-                print(round, file=f) #印猜了幾次
+                print(n_round, file=f) #印猜了幾次
                 break
 
             # 剔除那些不可能的答案
