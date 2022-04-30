@@ -1,7 +1,5 @@
-import os
 import sys
 import itertools
-import random
 import pickle
 from tqdm import tqdm
 from scipy.stats import entropy
