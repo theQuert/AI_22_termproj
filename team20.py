@@ -7,21 +7,31 @@ from tqdm import tqdm
 from scipy.stats import entropy
 from collections import defaultdict, Counter
 
+WORD_LEN = 5
 
 def calculate_pattern(guess, true):
     """
-    針對每次的猜測 印出評價
+    針對每次的猜測 返回評價 pattern
+    沒中 = 0
+    全對 = 1
+    錯位置 = 2
     """
 
-    wrong = [i for i, v in enumerate(guess) if v != true[i]]
+    # enumerate 解釋 https://stackoverflow.com/questions/57970751/python-what-does-i-for-i-mean
+    # wrong 儲存某些答案字母的位置 (而該位置是沒中 或 錯位置)
+    wrong = [i for (i,v) in enumerate(guess) if v != true[i]]
+
+    # counts 儲存答案字母 (那些沒中字母 以及 錯位置字母)
     counts = Counter(true[i] for i in wrong)
-    pattern = [2] * 5
+
+    # 預設每個字母都猜對
+    pattern = [1] * 5
     for i in wrong:
         v = guess[i]
-        if counts[v] > 0:
-            pattern[i] = 1
+        if counts[v] > 0: #錯位置
+            pattern[i] = 2
             counts[v] -= 1
-        else:
+        else: #沒中
             pattern[i] = 0
 
     return tuple(pattern)
@@ -36,6 +46,8 @@ def generate_pattern_dict(dictionary):
     >>> sorted(pattern_dict['crane'][(0, 1, 2, 0, 1)])
     ['bears', 'weary']
     """
+
+    # defaultdict(lambda: defaultdict(set)) 解釋 https://stackoverflow.com/questions/8419401/python-defaultdict-and-lambda
     pattern_dict = defaultdict(lambda: defaultdict(set))
     for word in tqdm(dictionary):
         for word2 in dictionary:
@@ -50,13 +62,12 @@ def calculate_entropies(words, possible_words, pattern_dict):
     entropies = {}
     for word in words:
         counts = []
-        WORD_LEN = 5
         # Generate the possible patterns of information we can get
         all_patterns = list(itertools.product([0, 1, 2], repeat=WORD_LEN))
 
         for pattern in all_patterns:
             matches = pattern_dict[word][pattern]
-            matches = matches.intersection(possible_words)
+            matches = matches.intersection(possible_words) #intersection() 方法用于返回两个或更多集合中都包含的元素
             counts.append(len(matches))
         entropies[word] = entropy(counts)
     return entropies
@@ -89,15 +100,16 @@ def main():
     print(f'Loaded dictionary with {len(all_dictionary)} words...')
     '''
 
-    # Calculate the pattern_dict and cache it, or load the cache.
-    if 'pattern_dict.p' in os.listdir('.'):
-        pattern_dict = pickle.load(open('pattern_dict.p', 'rb'))
-    else:
-        pattern_dict = generate_pattern_dict(all_dictionary)
-        pickle.dump(pattern_dict, open('pattern_dict.p', 'wb+'))
 
-    # Simulate games
-    stats = defaultdict(list)
+    # Calculate the pattern_dict and cache it 花了19秒
+    pattern_dict = generate_pattern_dict(all_dictionary)
+    pickle.dump(pattern_dict, open('pattern_dict.p', 'wb+'))
+
+    # or load the cache if it already exists 建議自己測試的時候 做過上面那兩行一次之後 把它隱藏 跑下面者這兩行
+    '''
+    if 'pattern_dict.p' in os.listdir('.'):
+    pattern_dict = pickle.load(open('pattern_dict.p', 'rb'))
+    '''
 
     for WORD_TO_GUESS in tqdm(dictionary):
         all_words = set(all_dictionary)
@@ -118,21 +130,13 @@ def main():
             guess_word = max(entropies.items(), key=lambda x: x[1])[0]
             info = calculate_pattern(guess_word, WORD_TO_GUESS)
 
-            #info(tuple) 轉 list
-            tmp_info = list(info)
-
-            #評價1轉2，評價2轉1
-            for i in range(5):
-                if tmp_info[i]==1:
-                    tmp_info[i] = 2
-                elif tmp_info[i]==2:
-                    tmp_info[i] = 1
-
             round = str(n_round)
 
             g.append(guess_word);
-            t.append(tmp_info);
 
+            # 將info (是tuple) 轉成 list
+            tmp_info = list(info)
+            t.append(tmp_info);
 
             if guess_word == WORD_TO_GUESS:
                 print(WORD_TO_GUESS, file=f) #先印正確答案
@@ -144,9 +148,9 @@ def main():
                 print(round, file=f) #印猜了幾次
                 break
 
-            # Filter our list of remaining possible words
+            # 剔除那些不可能的答案
             words = pattern_dict[guess_word][info]
-            all_words = all_words.intersection(words)
+            all_words = all_words.intersection(words) #intersection() 方法用于返回两个或更多集合中都包含的元素
     f.close()
 if __name__ == "__main__":
     main()
