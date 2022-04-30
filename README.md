@@ -1,0 +1,1 @@
+# AI_22_termproj
