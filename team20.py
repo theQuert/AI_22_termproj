@@ -89,7 +89,6 @@ def main():
     print(f'Loaded dictionary with {len(all_dictionary)} words...')
     '''
 
-    print(os.listdir)
     # Calculate the pattern_dict and cache it, or load the cache.
     if 'pattern_dict.p' in os.listdir('.'):
         pattern_dict = pickle.load(open('pattern_dict.p', 'rb'))
