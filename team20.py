@@ -17,20 +17,20 @@ def calculate_pattern(guess, true):
 
     # enumerate 解釋 https://stackoverflow.com/questions/57970751/python-what-does-i-for-i-mean
     # wrong 儲存某些答案字母的位置 (而該位置是沒中 或 錯位置)
-    wrong = [i for (i,v) in enumerate(guess) if v != true[i]]
+    wrong = [i for (i,v) in enumerate(guess) if v != true[i]] #for (i,v) in enumerate(guess): wrong.append(i)
 
     # counts 儲存答案字母 (那些沒中字母 以及 錯位置字母)
     counts = Counter(true[i] for i in wrong)
 
     # 預設每個字母都猜對
-    pattern = [1] * 5
+    pattern = [1] * 5 #建立1*5的list [1,1,1,1,1]
     for i in wrong:
-        v = guess[i]
-        if counts[v] > 0: #錯位置
-            pattern[i] = 2
-            counts[v] -= 1
+        v = guess[i] #從wrong紀錄的位置refer猜的字母
+        if counts[v] > 0: #從該字母反查有沒有在答案裏面 有：1 沒有：0  #所以>0 字母對但錯位
+            pattern[i] = 2 #標記錯位
+            counts[v] -= 1 #看過標記0
         else: #沒中
-            pattern[i] = 0
+            pattern[i] = 0 #標記沒中
 
     return tuple(pattern)
 
@@ -39,9 +39,9 @@ def generate_pattern_dict(dictionary):
     """For each word and possible information returned, store a list
     of candidate words
     >>> pattern_dict = generate_pattern_dict(['weary', 'bears', 'crane'])
-    >>> pattern_dict['crane'][(2, 2, 2, 2, 2)]
+    >>> pattern_dict['crane'][(1, 1, 1, 1, 1)]
     {'crane'}
-    >>> sorted(pattern_dict['crane'][(0, 1, 2, 0, 1)])
+    >>> sorted(pattern_dict['crane'][(0, 2, 1, 0, 2)])
     ['bears', 'weary']
     """
 
@@ -61,11 +61,11 @@ def calculate_entropies(words, possible_words, pattern_dict):
     for word in words:
         counts = []
         # Generate the possible patterns of information we can get
-        all_patterns = list(itertools.product([0, 1, 2], repeat=WORD_LEN))
+        all_patterns = list(itertools.product([0, 1, 2], repeat=WORD_LEN)) #3^5種可能 
 
         for pattern in all_patterns:
             matches = pattern_dict[word][pattern]
-            matches = matches.intersection(possible_words) #intersection() 方法用于返回两个或更多集合中都包含的元素
+            matches = matches.intersection(possible_words) #intersection() 方法用於返回兩個或更多集合中都包含的元素
             counts.append(len(matches))
         entropies[word] = entropy(counts)
     return entropies
@@ -103,7 +103,7 @@ def main():
     pattern_dict = generate_pattern_dict(all_dictionary)
     pickle.dump(pattern_dict, open('pattern_dict.p', 'wb+'))
 
-    # or load the cache if it already exists 建議自己測試的時候 做過上面那兩行一次之後 把它隱藏 跑下面者這兩行
+    # or load the cache if it already exists 建議自己測試的時候 做過上面那兩行一次之後 把它隱藏 跑下面這兩行
     '''
     if 'pattern_dict.p' in os.listdir('.'):
     pattern_dict = pickle.load(open('pattern_dict.p', 'rb'))
