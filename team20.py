@@ -17,7 +17,7 @@ def calculate_pattern(guess, true):
 
     # enumerate 解釋 https://stackoverflow.com/questions/57970751/python-what-does-i-for-i-mean
     # wrong 儲存某些答案字母的位置 (而該位置是沒中 或 錯位置)
-    wrong = [i for (i,v) in enumerate(guess) if v != true[i]] #for (i,v) in enumerate(guess): wrong.append(i)
+    wrong = [i for (i,v) in enumerate(guess) if v != true[i]]
 	mats = [v for (i,v) in enumerate(guess) if v==true[i]]
 
     # counts 儲存答案字母 (那些沒中字母 以及 錯位置字母)
