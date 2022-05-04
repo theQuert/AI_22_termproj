@@ -1,3 +1,4 @@
+import os
 import sys
 import itertools
 import pickle
@@ -10,32 +11,32 @@ WORD_LEN = 5
 def calculate_pattern(guess, true):
     """
     針對每次的猜測 返回評價 pattern
-    沒中 = 0
+    沒猜中 = 0
     全對 = 1
     錯位置 = 2
     """
 
-    # enumerate 解釋 https://stackoverflow.com/questions/57970751/python-what-does-i-for-i-mean
-    # wrong 儲存某些答案字母的位置 (而該位置是沒中 或 錯位置)
+    # enumerate: https://stackoverflow.com/questions/57970751/python-what-does-i-for-i-mean
+    # wrong 儲存正確 word 中那些沒被猜中或被猜錯位置的字母的 index
     wrong = [i for (i,v) in enumerate(guess) if v != true[i]]
     # mats = [v for (i,v) in enumerate(guess) if v == true[i]]
 
-    # counts 儲存答案字母 (那些沒中字母 以及 錯位置字母)
+    # counts 一個計數器，紀錄正確 word 的那些沒被猜中字母 以及 錯位置字母所出現的次數
     counts = Counter(true[i] for i in wrong)
 
     # 預設每個字母都猜對
-    pattern = [1] * 5 #建立1*5的list [1,1,1,1,1]
-    for i in wrong:
-        v = guess[i] #從wrong紀錄的位置refer猜的字母
-        if counts[v] > 0: #從該字母反查有沒有在答案裏面 有：1 沒有：0  #所以>0 字母對但錯位
-            pattern[i] = 2 #標記錯位
-            counts[v] -= 1 #看過標記0
-        else: #沒中
-            pattern[i] = 0 #標記沒中
+    pattern = [1] * 5 #建立 1*5 的list [1,1,1,1,1]
+    for i in wrong: 
+        v = guess[i] # 從 wrong 紀錄的位置 refer 該位置我們猜甚麼字母
+        if counts[v] > 0: # 查詢我們猜的字母是否有在正確 word 裏面 有(代表錯位)，則counts[v] > 0, othersie counts[v] = 0 (表示沒猜中)  
+            pattern[i] = 2 # 標記錯位
+            counts[v] -= 1 # 計數器 -1
+        else: # 沒中
+            pattern[i] = 0 # 標記沒中
 
     return tuple(pattern)
 
-#做這花19秒，但只會做一次
+# 做這花19秒，但只會做一次
 def generate_pattern_dict(dictionary):
     """For each word and possible information returned, store a list
     of candidate words
@@ -46,7 +47,7 @@ def generate_pattern_dict(dictionary):
     ['bears', 'weary']
     """
 
-    # defaultdict(lambda: defaultdict(set)) 解釋 https://stackoverflow.com/questions/8419401/python-defaultdict-and-lambda
+    # defaultdict(lambda: defaultdict(set)): https://stackoverflow.com/questions/8419401/python-defaultdict-and-lambda
     pattern_dict = defaultdict(lambda: defaultdict(set))
     for word in tqdm(dictionary):
         for word2 in dictionary:
@@ -62,7 +63,7 @@ def calculate_entropies(words, possible_words, pattern_dict):
     for word in words:
         counts = []
         # Generate the possible patterns of information we can get
-        all_patterns = list(itertools.product([0, 1, 2], repeat=WORD_LEN)) #3^5種可能 
+        all_patterns = list(itertools.product([0, 1, 2], repeat=WORD_LEN)) # 3^5 種可能 
 
         for pattern in all_patterns:
             matches = pattern_dict[word][pattern]
@@ -73,50 +74,47 @@ def calculate_entropies(words, possible_words, pattern_dict):
 
 
 def main():
-    #接收三個參數。
+    # 接收三個參數。
 
-    #第一個參數是答案集合的檔案名稱，也就是 wordle-answers-alphabetical.txt
-    #sys.argv[1]
+    # 第一個參數是答案集合的檔案名稱，也就是 wordle-answers-alphabetical.txt
+    # sys.argv[1]
     # Load 所有可能解，第一次測試，我們只考慮答案庫裡的2315個單字
     with open(sys.argv[1]) as ifp:
         all_dictionary = list(map(lambda x: x.strip(), ifp.readlines()))
 
-    #第二個參數是考題的檔案名稱tests.txt
-    #sys.argv[2]
-    # Load 助教出的題目
+    # 第二個參數是助教出的題目的檔案名稱tests.txt
+    # sys.argv[2]
+    # Load 助教出的題目(我們要猜的 word)
     with open(sys.argv[2]) as ifp:
         dictionary = list(map(lambda x: x.strip(), ifp.readlines()))
 
-    #第三個參數是各組程式針對tests.txt所做的答覆的紀錄的檔案名稱
-    #sys.argv[3]
-    #將猜測結果寫入檔案 team20_first.txt
+    # 第三個參數是各組程式針對tests.txt所做的答覆的紀錄的檔案名稱
+    # sys.argv[3]
+    # 將猜測結果寫入檔案 team20_first.txt
     f = open(sys.argv[3], 'w')
 
 
-    '''第一次測試 不會有不合規格的字 先略
+    # 第一次測試 不會有不合規格的字
+    '''
     error_msg = 'Dictionary contains different length words.'
     assert len({len(x) for x in all_dictionary}) == 1, error_msg
     print(f'Loaded dictionary with {len(all_dictionary)} words...')
     '''
 
 
-    # Calculate the pattern_dict and cache it 花了19秒
+   #if 'pattern_dict.p' in os.listdir('.'):
+       # pattern_dict = pickle.load(open('pattern_dict.p', 'rb'))
+    #else:
     pattern_dict = generate_pattern_dict(all_dictionary)
     pickle.dump(pattern_dict, open('pattern_dict.p', 'wb+'))
-
-    # or load the cache if it already exists 建議自己測試的時候 做過上面那兩行一次之後 把它隱藏 跑下面這兩行
-    '''
-    if 'pattern_dict.p' in os.listdir('.'):
-    pattern_dict = pickle.load(open('pattern_dict.p', 'rb'))
-    '''
 
     for WORD_TO_GUESS in tqdm(dictionary):
         all_words = set(all_dictionary)
         init_round = 1
-        g = [] #儲存我們猜過的字
-        t = [] #儲存我們每次猜所獲評價
+        g = [] # 儲存我們猜過的字
+        t = [] # 儲存我們每次猜所獲評價 patterm
 
-        for n_round in range(init_round, 2315): #最多猜2315次 我們要猜到為止
+        for n_round in range(init_round, 2316): #最多猜2315次 我們要猜到為止
 
             candidates = all_dictionary
             entropies = calculate_entropies(candidates, all_words, pattern_dict)
@@ -132,18 +130,18 @@ def main():
 
             g.append(guess_word);
 
-            # 將info (是tuple) 轉成 list
+            # 將 info (a tuple) 轉成 list
             tmp_info = list(info)
             t.append(tmp_info);
 
             if guess_word == WORD_TO_GUESS:
-                print(WORD_TO_GUESS, file=f) #先印正確答案
-                for i in range(n_round): #印猜的過程
+                print(WORD_TO_GUESS, file=f) # 先印正確答案
+                for i in range(n_round): # 印猜的過程
                     times = str(i+1)
                     print(times + '; ' + g[i] + '; "', end="", file=f)
                     print(*t[i], sep=",", end="", file=f)
                     print('"', file=f)
-                print(n_round, file=f) #印猜了幾次
+                print(n_round, file=f) # 印猜了幾次
                 break
 
             # 剔除那些不可能的答案
