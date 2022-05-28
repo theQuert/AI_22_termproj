@@ -1,5 +1,16 @@
 from collections import Counter
 
+"""
+1. 把 calculate_pattern 函式改名成 compare2words_stage2
+2. 第二戰的單字會是7個字母長，但不知道為甚麼 game2_sample_responses.txt ，它裡面的單字都只有5個字母長。
+3. 新的compare function 是適用於7個字母長的第二戰。
+4. 我測試過把檔案裡的7都改成5(變成檢查5個字母長的單字)，拿game2_sample_responses.txt來驗證，輸出跟老師都是一樣的，所以新的compare function用在第二戰應該是沒問題的。
+
+我覺得比對的順序有點tricky
+例如，如果答案是 eE, 我們猜 xe。這樣我的程式是輸出03，而不是02。
+但至少目前照直覺寫出來的code跟老師提供的範例輸出都一樣。
+我的想法是比對的順序是13240，如果一個字母可以是3也可以是2，一定給3。(上面那個例子)
+"""
 
 def compare2words_stage2(ans, guess):
     """
