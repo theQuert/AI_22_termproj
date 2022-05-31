@@ -8,32 +8,45 @@ from collections import defaultdict, Counter
 
 WORD_LEN = 5
 
-def calculate_pattern(guess, true):
+def compare2words_stage2(ans, guess):
     """
     針對每次的猜測 返回評價 pattern
-    沒猜中 = 0
-    全對 = 1
-    錯位置 = 2
+    0: 答案沒有該字母
+    1: 字母正確、位置正確、大小寫正確
+    2: 字母正確、位置不正確、大小寫正確
+    3: 字母正確、位置正確、大小寫不正確
+    4: 字母正確、位置不正確、大小寫不正確
     """
 
-    # enumerate: https://stackoverflow.com/questions/57970751/python-what-does-i-for-i-mean
-    # wrong 儲存正確 word 中那些沒被猜中或被猜錯位置的字母的 index
-    wrong = [i for (i,v) in enumerate(guess) if v != true[i]]
-    # mats = [v for (i,v) in enumerate(guess) if v == true[i]]
-
-    # counts 一個計數器，紀錄正確 word 的那些沒被猜中字母 以及 錯位置字母所出現的次數
-    counts = Counter(true[i] for i in wrong)
-
-    # 預設每個字母都猜對
-    pattern = [1] * 5 #建立 1*5 的list [1,1,1,1,1]
-    for i in wrong: 
-        v = guess[i] # 從 wrong 紀錄的位置 refer 該位置我們猜甚麼字母
-        if counts[v] > 0: # 查詢我們猜的字母是否有在正確 word 裏面 有(代表錯位)，則counts[v] > 0, othersie counts[v] = 0 (表示沒猜中)  
-            pattern[i] = 2 # 標記錯位
-            counts[v] -= 1 # 計數器 -1
-        else: # 沒中
-            pattern[i] = 0 # 標記沒中
-
+    pattern = [0] * 7  # 建立 1*7 的list [0, 0, 0, 0, 0, 0, 0, 0]: 答案沒有該字母
+    counts = Counter(ans[i] for i in range(7))  # 紀錄答案出現了甚麼字母，分別幾次(有大小寫之分)
+    for i in range(7):  # 先檢查 1: 字母正確、位置正確、大小寫正確。因為他優先權最大
+        if guess[i] == ans[i]:
+            pattern[i] = 1
+            counts[guess[i]] -= 1  # 配對過了，必須從紀錄消除
+    for i in range(7):  # 再檢查 3: 字母正確、位置正確、大小寫不正確
+        if pattern[i] == 0:
+            if guess[i].islower():  # guess[i]是小寫
+                if ans[i].isupper() and guess[i] == ans[i].lower():
+                    pattern[i] = 3
+                    counts[ans[i]] -= 1
+            else:  # guess[i]是大寫
+                if ans[i].islower() and guess[i] == ans[i].upper():
+                    pattern[i] = 3
+                    counts[ans[i]] -= 1
+    for i in range(7):  # 再檢查 2: 字母正確、位置不正確、大小寫正確
+        if pattern[i] == 0:
+            if counts[guess[i]] > 0:
+                pattern[i] = 2
+                counts[guess[i]] -= 1
+    for i in range(7):  # 再檢查 4: 字母正確、位置不正確、大小寫不正確
+        if pattern[i] == 0:  # 這時候guess[i]的可能只剩下0(全錯)或是4(字母正確、位置不正確、大小寫不正確)
+            if counts[guess[i].lower()] > 0 or counts[guess[i].upper()] > 0:
+                pattern[i] = 4
+                if guess[i].islower():
+                    counts[guess[i].upper()] -= 1
+                else:
+                    counts[guess[i].lower()] -= 1
     return tuple(pattern)
 
 # 做這花19秒，但只會做一次
@@ -51,7 +64,7 @@ def generate_pattern_dict(dictionary):
     pattern_dict = defaultdict(lambda: defaultdict(set))
     for word in tqdm(dictionary):
         for word2 in dictionary:
-            pattern = calculate_pattern(word, word2)
+            pattern = compare2words_stage2(word, word2)
             pattern_dict[word][pattern].add(word2)
     return dict(pattern_dict)
 
@@ -125,7 +138,7 @@ def main():
 
             # Guess the candidate with highest entropy
             guess_word = max(entropies.items(), key=lambda x: x[1])[0]
-            info = calculate_pattern(guess_word, WORD_TO_GUESS)
+            info = compare2words_stage2(guess_word, WORD_TO_GUESS)
 
             if n_round==1: print(f'First guess: {guess_word}')
             else: print(f'Current guess: {guess_word}')
