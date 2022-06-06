@@ -231,10 +231,11 @@ def main():
                 break
 
             
-            #test
+            '''test
             print(n_round)
             print(guess_word)
             print(f'feedback: {feedback}')
+            '''
             
             # 剔除那些不可能的答案
             words = pattern_dict[lower_letter_guess_word][info]
