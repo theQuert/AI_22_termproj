@@ -121,7 +121,7 @@ def main():
 
     # 第一個參數是答案集合的檔案名稱，也就是 wordle-answers-alphabetical.txt
     # sys.argv[1]
-    # Load 所有可能解，第一次測試，我們只考慮答案庫裡的2315個單字
+    # Load 所有可能解，第一次測試，我們只考慮答案庫裡的所有單字
     with open(sys.argv[1]) as ifp:
         all_dictionary = list(map(lambda x: x.strip(), ifp.readlines()))
 
@@ -160,12 +160,17 @@ def main():
 
         #feedback儲存透過compare2words評價的值（0,1,2,3,4,5）
         feedback = [0]*WORD_LEN
-        #用來紀錄大小寫，並且藉此來更改大小寫 0:小寫 1:大寫
+        #用來紀錄字母的大小寫，並且藉此來更改大小寫 0:小寫 1:大寫
         alpha_value = [0]*26
         alpha_key = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
         alpha_dic = dict(zip(alpha_key, alpha_value))
 
-        for n_round in range(init_round, 2316): #最多猜2315次 我們要猜到為止
+        #透過encode來固定位置、大小寫正確（即評價=1）的字母
+        fixed_idx = [i for i in range(7)]
+        fixed_val = ['#' for _ in range(7)]
+        fixed_ans = dict(zip(fixed_idx, fixed_val))
+
+        for n_round in range(init_round, len(all_dictionary)): #最多猜完整個答案集 我們要猜到為止
     
             candidates = all_dictionary
             entropies = calculate_entropies(candidates, all_words, pattern_dict)
@@ -190,13 +195,19 @@ def main():
             #查alpha_dictionary，來決定大小寫
             for i in range(7):
                 key = lower_letter_guess_word[i]
-                #字母是小寫 
-                if alpha_dic[key] == 0: 
-                    guess_word[i] = lower_letter_guess_word[i]
-                #字母是大寫
-                elif alpha_dic[key] == 1:
-                    guess_word[i] = lower_letter_guess_word[i].upper()
-            guess_word = "".join(guess_word)
+                
+                if type(fixed_ans[i])==type('str'): 
+                    if alpha_dic[key] == 1: #大寫
+                        fixed_ans[i] = lower_letter_guess_word[i].upper()
+                    else: fixed_ans[i] = lower_letter_guess_word[i]#小寫
+
+            guess_word_lst = []
+            keys_lst = list(fixed_ans.keys())
+            for idx in range(7):
+                if type(fixed_ans[keys_lst[idx]])==type('str'.encode()): # 位置對，字母也對 -> type=='byte'
+                    guess_word_lst.append(fixed_ans[keys_lst[idx]].decode())
+                else: guess_word_lst.append(fixed_ans[keys_lst[idx]])
+            guess_word = "".join(guess_word_lst)
 
             #紀錄本次答題 
             g.append(guess_word)
@@ -219,7 +230,8 @@ def main():
                     #大寫改小寫
                     else:
                         alpha_dic[key] = 0
-
+                elif feedback[i] == 1: fixed_ans[i] = guess_word[i].encode()
+            
             if guess_word == WORD_TO_GUESS:
                 print(WORD_TO_GUESS, file=f) # 先印正確答案
                 for i in range(n_round): # 印猜的過程
