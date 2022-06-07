@@ -226,9 +226,12 @@ def main():
             
             #紀錄本次評價
             tmp_feedback = list(feedback)
+            for idx in tmp_feedback:
+                if idx==5
             t.append(tmp_feedback)
             print(tmp_feedback)
 
+            info_lst = list(info)
             #更新字母大小寫
             for i in range(7):
                 #大小寫錯
@@ -241,6 +244,7 @@ def main():
                     else:
                         alpha_dic[key] = 0
                 elif feedback[i] == 1: fixed_ans[i] = guess_word[i].encode()
+                elif feedback[i] == 5: info_lst[i]=2
             
             if guess_word == WORD_TO_GUESS:
                 print(WORD_TO_GUESS, file=f) # 先印正確答案
@@ -251,7 +255,7 @@ def main():
                     print('"', file=f)
                 print(n_round, file=f) # 印猜了幾次
                 break
-
+            info = tuple(info_lst)
             
             '''test
             print(n_round)

@@ -429,6 +429,7 @@ cindric
 circles
 clamber
 clashes
+classes
 clauses
 clemmer
 cliched

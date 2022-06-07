@@ -221,13 +221,15 @@ def main():
             t.append(tmp_feedback)
 
             #更新字母大小寫
+            seen = []
             for i in range(7):
                 #大小寫錯
                 if feedback[i] == 3 or feedback[i] == 4: 
                     key = guess_word[i].lower()
                     #小寫改大寫
-                    if(alpha_dic[key] == 0):
+                    if(alpha_dic[key] == 0) or key in seen:
                         alpha_dic[key] = 1
+                        seen.append(key)
                     #大寫改小寫
                     else:
                         alpha_dic[key] = 0
