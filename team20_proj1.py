@@ -105,8 +105,8 @@ def main():
     if 'pattern_dict.p' in os.listdir('.'):
        pattern_dict = pickle.load(open('pattern_dict_1.p', 'rb'))
     else:
-    pattern_dict = generate_pattern_dict(all_dictionary)
-    pickle.dump(pattern_dict, open('pattern_dict_1.p', 'wb+'))
+        pattern_dict = generate_pattern_dict(all_dictionary)
+        pickle.dump(pattern_dict, open('pattern_dict_1.p', 'wb+'))
 
     for WORD_TO_GUESS in tqdm(dictionary):
         all_words = set(all_dictionary)
