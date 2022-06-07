@@ -84,7 +84,6 @@ def compare2words(ans, guess):
     3: 字母正確、位置正確、大小寫不正確
     4: 字母正確、位置不正確、大小寫不正確
     """
-
     pattern = [0] * 7  # 建立 1*7 的list [0, 0, 0, 0, 0, 0, 0, 0]: 答案沒有該字母
     counts = Counter(ans[i] for i in range(7))  # 紀錄答案出現了甚麼字母，分別幾次(有大小寫之分)
     for i in range(7):  # 先檢查 1: 字母正確、位置正確、大小寫正確。因為他優先權最大
