@@ -1,5 +1,5 @@
 # AI_22_termproj
-### Batch Mode (1$^{st}$ stage)
+### Batch Mode ($1^{st}$ stage)
 - `team20_proj1.py`: Python Script
 - `wordle-answers-alphabetical.txt`: The given dictionary
 - `targets_1.txt`: The given targets
@@ -10,7 +10,7 @@ python3 team20_proj1.py wordle-answers-alphabetical.txt targets_1.txt rec_1.txt
 ```
 Model is stored as `pattern_dict_1.p`
 
-### 7 characters (2$^{nd}$ stage)
+### 7 characters ($2^{nd}$ stage)
 - `team20_proj2.py`: Python Script
 - `sampled71.txt`: The gien dictionary (lowercase)
 - `targets_2.txt`: The given targets
@@ -21,7 +21,7 @@ python3 team20_proj2.py sampled71.txt targets_2.txt rec_2.txt
 ```
 Model is stored as `pattern_dict_2.p`
 
-### Interactive Mode with 7 characters (3$^{rd}$ stage)
+### Interactive Mode with 7 characters ($3^{rd}$ stage)
 - `team20_proj3.py`: Python Script
 - `sampled71.txt`: The given dictionary (lowercase)
 - `targets_3.txt`: The given targets
