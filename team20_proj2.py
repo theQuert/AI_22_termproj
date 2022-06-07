@@ -36,7 +36,7 @@ def calculate_pattern(guess, true):
 
     return tuple(pattern)
 
-# 約2分鐘，但只會做一次
+# 約15秒，但只會做一次
 def generate_pattern_dict(dictionary):
     """
     Example for wordlen = 5
@@ -58,10 +58,11 @@ def generate_pattern_dict(dictionary):
     return dict(pattern_dict)
 
 
-def calculate_entropies(words, possible_words, pattern_dict):
+def calculate_entropies(words, possible_words, pattern_dict, all_dictionary):
     """Calculate the entropy for every word in `words`, taking into account
     the remaining `possible_words`"""
     entropies = {}
+    words = list(set(words).intersection(set(all_dictionary)))
     for word in words:
         counts = []
         # Generate the possible patterns of information we can get
@@ -144,7 +145,6 @@ def main():
     print(f'Loaded dictionary with {len(all_dictionary)} words...')
     '''
 
-
     if 'pattern_dict.p' in os.listdir('.'):
        pattern_dict = pickle.load(open('pattern_dict.p', 'rb'))
     
@@ -171,13 +171,15 @@ def main():
         fixed_ans = dict(zip(fixed_idx, fixed_val))
 
         for n_round in range(init_round, len(all_dictionary)): #最多猜完整個答案集 我們要猜到為止
-    
-            candidates = all_dictionary
-            entropies = calculate_entropies(candidates, all_words, pattern_dict)
             
+            candidates = all_dictionary
+            # all_words = all_words.intersection(set(all_dictionary))
+            entropies = calculate_entropies(candidates, all_words, pattern_dict, all_dictionary) # input format: list, set, dict, all_dicionary
+
             if max(entropies.values()) < 0.1:
-                candidates = all_words
-                entropies = calculate_entropies(candidates, all_words, pattern_dict)
+                # all_words = all_words.intersection(set(all_dictionary))
+                candidates = list(all_words) # convert `all_words` to list format
+                entropies = calculate_entropies(candidates, all_words, pattern_dict, all_dictionary)
 
             # Guess the candidate with highest entropy
             lower_letter_guess_word = max(entropies.items(), key=lambda x: x[1])[0]
