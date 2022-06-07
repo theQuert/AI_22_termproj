@@ -146,11 +146,11 @@ def main():
     '''
 
     if 'pattern_dict.p' in os.listdir('.'):
-       pattern_dict = pickle.load(open('pattern_dict.p', 'rb'))
+       pattern_dict = pickle.load(open('pattern_dict_2.p', 'rb'))
     
     else:
         pattern_dict = generate_pattern_dict(all_dictionary) # costs 2 min.
-        pickle.dump(pattern_dict, open('pattern_dict.p', 'wb+'))
+        pickle.dump(pattern_dict, open('pattern_dict_2.p', 'wb+'))
 
     for WORD_TO_GUESS in tqdm(dictionary):
         all_words = set(all_dictionary)
@@ -215,7 +215,7 @@ def main():
             g.append(guess_word)
 
             #確認本次答題後，再重新評價
-            feedback = compare2words(WORD_TO_GUESS,guess_word)
+            feedback = compare2words(WORD_TO_GUESS, guess_word)
             
             #紀錄本次評價
             tmp_feedback = list(feedback)
