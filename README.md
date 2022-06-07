@@ -17,7 +17,7 @@ Model is stored as `pattern_dict_1.p
 - `rec_second.txt`: Record of guessing process
 - Running the script
 ```BASH
-python3 team20_proj2.py sampled71.txt test2.txt rec_second.txt
+python3 team20_proj2.py sampled71.txt test_2.txt rec_second.txt
 ```
 Model is stored as `pattern_dict_2.p`
 
