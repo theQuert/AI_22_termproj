@@ -12,7 +12,7 @@ Model is stored as `pattern_dict_1.p`
 
 ### 7 characters ($2^{nd}$ stage)
 - `team20_proj2.py`: Python Script
-- `sampled71.txt`: The gien dictionary (lowercase)
+- `game2list2.txt`: The gien dictionary (lowercase)
 - `targets_2.txt`: The given targets
 - `rec_2.txt`: Record of guessing process
 - Running the script
