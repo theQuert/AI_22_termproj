@@ -5,6 +5,7 @@ import pickle
 from tqdm import tqdm
 from scipy.stats import entropy
 from collections import defaultdict, Counter
+import string
 
 WORD_LEN = 7
 
@@ -62,7 +63,8 @@ def calculate_entropies(words, possible_words, pattern_dict, all_dictionary):
     """Calculate the entropy for every word in `words`, taking into account
     the remaining `possible_words`"""
     entropies = {}
-    words = list(set(words).intersection(set(all_dictionary)))
+    # words = list(set(words).intersection(set(all_dictionary)))
+    words = list(set(possible_words).intersection(set(all_dictionary)))
     for word in words:
         counts = []
         # Generate the possible patterns of information we can get
@@ -161,7 +163,7 @@ def main():
         feedback = [0]*WORD_LEN
         #用來紀錄字母的大小寫，並且藉此來更改大小寫 0:小寫 1:大寫
         alpha_value = [0]*26
-        alpha_key = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
+        alpha_key = list(string.ascii_lowercase)
         alpha_dic = dict(zip(alpha_key, alpha_value))
 
         #透過encode來固定位置、大小寫正確（即評價=1）的字母
@@ -174,9 +176,8 @@ def main():
             candidates = all_dictionary
             # all_words = all_words.intersection(set(all_dictionary))
             entropies = calculate_entropies(candidates, all_words, pattern_dict, all_dictionary) # input format: list, set, dict, all_dicionary
-
             if max(entropies.values()) < 0.1:
-                # all_words = all_words.intersection(set(all_dictionary))
+                all_words = all_words.intersection(set(all_dictionary))
                 candidates = list(all_words) # convert `all_words` to list format
                 entropies = calculate_entropies(candidates, all_words, pattern_dict, all_dictionary)
 
@@ -185,7 +186,7 @@ def main():
             
             #由於答案有大小寫，但是答案集都是小寫，為了比較兩者得出是否字母正確、位置正確，一律轉成小寫比較
             lower_letter_word_to_guess = WORD_TO_GUESS.lower()
-            
+
             #info 可以知道字母、位置是否正確，但忽略大小寫是否正確
             #info 也可以在後續排除機率低的答案 
             info = calculate_pattern(lower_letter_guess_word, lower_letter_word_to_guess) 
@@ -195,19 +196,22 @@ def main():
             
             #查alpha_dictionary，來決定大小寫
             for i in range(7):
-                key = lower_letter_guess_word[i]
-                
+                # key = lower_letter_guess_word[i]
+                key = guess_word[i]
                 if type(fixed_ans[i])==type('str'): 
                     if alpha_dic[key] == 1: #大寫
-                        fixed_ans[i] = lower_letter_guess_word[i].upper()
-                    else: fixed_ans[i] = lower_letter_guess_word[i]#小寫
+                        # fixed_ans[i] = lower_letter_guess_word[i].upper()
+                        fixed_ans[i] = guess_word[i].upper()
+                    # else: fixed_ans[i] = lower_letter_guess_word[i]#小寫
+                    else: fixed_ans[i] = guess_word[i]#小寫
 
             guess_word_lst = []
-            keys_lst = list(fixed_ans.keys())
+            # keys_lst = list(fixed_ans.keys())
             for idx in range(7):
-                if type(fixed_ans[keys_lst[idx]])==type('str'.encode()): # 位置對，字母也對 -> type=='byte'
-                    guess_word_lst.append(fixed_ans[keys_lst[idx]].decode())
-                else: guess_word_lst.append(fixed_ans[keys_lst[idx]])
+                # if type(fixed_ans[keys_lst[idx]])==type('str'.encode()): # 位置對，字母也對 -> type=='byte'
+                if type(fixed_ans[idx])==type('str'.encode()): # 位置對，字母也對 -> type=='byte'
+                    guess_word_lst.append(fixed_ans[idx].decode())
+                else: guess_word_lst.append(fixed_ans[idx])
             guess_word = "".join(guess_word_lst)
 
             #紀錄本次答題 
@@ -224,7 +228,7 @@ def main():
             seen = []
             for i in range(7):
                 #大小寫錯
-                if feedback[i] == 3 or feedback[i] == 4: 
+                if feedback[i] == 4: 
                     key = guess_word[i].lower()
                     #小寫改大寫
                     if(alpha_dic[key] == 0) or key in seen:
@@ -233,6 +237,10 @@ def main():
                     #大寫改小寫
                     else:
                         alpha_dic[key] = 0
+                elif feedback[i] == 3 and guess_word[i].isupper(): 
+                    fixed_ans[i] = guess_word[i].lower().encode()
+                elif feedback[i] == 3 and guess_word[i].islower(): 
+                    fixed_ans[i] = guess_word[i].upper().encode()
                 elif feedback[i] == 1: fixed_ans[i] = guess_word[i].encode()
             
             if guess_word == WORD_TO_GUESS:
@@ -244,7 +252,6 @@ def main():
                     print('"', file=f)
                 print(n_round, file=f) # 印猜了幾次
                 break
-
             
             '''test
             print(n_round)
@@ -253,7 +260,8 @@ def main():
             '''
             
             # 剔除那些不可能的答案
-            words = pattern_dict[lower_letter_guess_word][info]
+            # words = pattern_dict[lower_letter_guess_word][info]
+            words = pattern_dict[guess_word.lower()][info]
             all_words = all_words.intersection(words) #intersection() 方法用於返回两个或更多集合中都包含的元素
     f.close()
 if __name__ == "__main__":
