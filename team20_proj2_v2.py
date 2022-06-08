@@ -5,10 +5,10 @@ import pickle
 from tqdm import tqdm
 from scipy.stats import entropy
 from collections import defaultdict, Counter
-import random
-import copy
+import string
 
 WORD_LEN = 7
+
 
 def calculate_pattern(guess, true):
     """
@@ -20,25 +20,24 @@ def calculate_pattern(guess, true):
 
     # enumerate: https://stackoverflow.com/questions/57970751/python-what-does-i-for-i-mean
     # wrong 儲存正確 word 中那些沒被猜中或被猜錯位置的字母的 index
-    wrong = [i for (i,v) in enumerate(guess) if v != true[i]]
-    # mats = [v for (i,v) in enumerate(guess) if v == true[i]]
+    wrong = [i for (i, v) in enumerate(guess) if v != true[i]]
 
     # counts 一個計數器，紀錄正確 word 的那些沒被猜中字母 以及 錯位置字母所出現的次數
     counts = Counter(true[i] for i in wrong)
 
     # 預設每個字母都猜對
-    pattern = [1] * WORD_LEN #建立 1*5 的list [1,1,1,1,1]
-    for i in wrong: 
-        v = guess[i] # 從 wrong 紀錄的位置 refer 該位置我們猜甚麼字母
-        if counts[v] > 0: # 查詢我們猜的字母是否有在正確 word 裏面 有(代表錯位)，則counts[v] > 0, othersie counts[v] = 0 (表示沒猜中)  
-            pattern[i] = 2 # 標記錯位
-            counts[v] -= 1 # 計數器 -1
-        else: # 沒中
-            pattern[i] = 0 # 標記沒中
+    pattern = [1] * WORD_LEN  # 建立 1*5 的list [1,1,1,1,1]
+    for i in wrong:
+        v = guess[i]  # 從 wrong 紀錄的位置 refer 該位置我們猜甚麼字母
+        if counts[v] > 0:  # 查詢我們猜的字母是否有在正確 word 裏面 有(代表錯位)，則counts[v] > 0, othersie counts[v] = 0 (表示沒猜中)
+            pattern[i] = 2  # 標記錯位
+            counts[v] -= 1  # 計數器 -1
+        else:  # 沒中
+            pattern[i] = 0  # 標記沒中
 
     return tuple(pattern)
 
-# 約15秒，但只會做一次
+
 def generate_pattern_dict(dictionary):
     """
     Example for wordlen = 5
@@ -60,22 +59,24 @@ def generate_pattern_dict(dictionary):
     return dict(pattern_dict)
 
 
-def calculate_entropies(words, possible_words, pattern_dict, all_dictionary):
+def calculate_entropies(possible_words, pattern_dict):
     """Calculate the entropy for every word in `words`, taking into account
     the remaining `possible_words`"""
     entropies = {}
-    words = list(set(words).intersection(set(all_dictionary)))
+    # words = list(set(words).intersection(set(all_dictionary)))
+    words = list(possible_words)
     for word in words:
         counts = []
         # Generate the possible patterns of information we can get
-        all_patterns = list(itertools.product([0, 1, 2], repeat=WORD_LEN)) # 3^7 種可能 
+        all_patterns = list(itertools.product([0, 1, 2], repeat=WORD_LEN))  # 3^7 種可能
 
         for pattern in all_patterns:
             matches = pattern_dict[word][pattern]
-            matches = matches.intersection(possible_words) #intersection() 方法用於返回兩個或更多集合中都包含的元素
+            matches = matches.intersection(possible_words)  # intersection() 方法用於返回兩個或更多集合中都包含的元素
             counts.append(len(matches))
         entropies[word] = entropy(counts)
     return entropies
+
 
 def compare2words(ans, guess):
     """
@@ -123,7 +124,7 @@ def main():
 
     # 第一個參數是答案集合的檔案名稱，也就是 wordle-answers-alphabetical.txt
     # sys.argv[1]
-    # Load 所有可能解，第一次測試，我們只考慮答案庫裡的所有單字
+    # Load 所有可能解，我們只考慮答案庫裡的所有單字
     with open(sys.argv[1]) as ifp:
         all_dictionary = list(map(lambda x: x.strip(), ifp.readlines()))
 
@@ -138,186 +139,121 @@ def main():
     # 將猜測結果寫入檔案 team20_first.txt
     f = open(sys.argv[3], 'w')
 
+    if 'pattern_dict_.p' in os.listdir('.'):
+        pattern_dict = pickle.load(open('pattern_dict_2.p', 'rb'))
 
-    # 第一次測試 不會有不合規格的字
-    '''
-    error_msg = 'Dictionary contains different length words.'
-    assert len({len(x) for x in all_dictionary}) == 1, error_msg
-    print(f'Loaded dictionary with {len(all_dictionary)} words...')
-    '''
-
-    if 'pattern_dict_2.p' in os.listdir('.'):
-       pattern_dict = pickle.load(open('pattern_dict_2.p', 'rb'))
-    
     else:
-        pattern_dict = generate_pattern_dict(all_dictionary) # costs 2 min.
+        pattern_dict = generate_pattern_dict(all_dictionary)  # costs 2 min.
         pickle.dump(pattern_dict, open('pattern_dict_2.p', 'wb+'))
 
-    for WORD_TO_GUESS in tqdm(dictionary):
+    for WORD_TO_GUESS in dictionary:
         all_words = set(all_dictionary)
         init_round = 1
-        g = [] # 儲存我們猜過的字
-        t = [] # 儲存我們每次猜所獲評價 pattern
+        g = []  # 儲存我們猜過的字
+        t = []  # 儲存我們每次猜所獲評價 pattern
 
-        #feedback儲存透過compare2words評價的值（0,1,2,3,4）
-        feedback = [0]*WORD_LEN
-        #alpha_dic根據現有的資訊（之前猜測過的單字有在答案裏面的），來紀錄字母的大小寫的次數
-        alpha_value = [0]*52
-        alpha_key = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
+        # 用來紀錄字母的大小寫，並且藉此來更改大小寫 0:小寫 1:大寫
+        alpha_value = [0] * 26
+        alpha_key = list(string.ascii_lowercase)
         alpha_dic = dict(zip(alpha_key, alpha_value))
 
-        #透過encode來固定位置、大小寫正確（即評價=1）的字母
+        # 透過encode來固定位置、大小寫正確（即評價=1）的字母
         fixed_idx = [i for i in range(7)]
         fixed_val = ['#' for _ in range(7)]
         fixed_ans = dict(zip(fixed_idx, fixed_val))
 
-        for n_round in range(init_round, len(all_dictionary)): #最多猜完整個答案集 我們要猜到為止
-            
-            candidates = all_dictionary
+        for n_round in range(init_round, len(all_dictionary)):  # 最多猜完整個答案集 我們要猜到為止
+
             # all_words = all_words.intersection(set(all_dictionary))
-            entropies = calculate_entropies(candidates, all_words, pattern_dict, all_dictionary) # input format: list, set, dict, all_dicionary
+            entropies = calculate_entropies(all_words, pattern_dict)
 
-            if max(entropies.values()) < 0.1:
-                # all_words = all_words.intersection(set(all_dictionary))
-                candidates = list(all_words) # convert `all_words` to list format
-                entropies = calculate_entropies(candidates, all_words, pattern_dict, all_dictionary)
+            # Choose the one with highest entropy
+            lower_letter_guess_word = max(entropies.items(), key=lambda x: x[1])[0]
 
-            # Guess the candidate with highest entropy
-            lower_letter_guess_word = max(entropies.items(), key=lambda x: x[1])[0]    
-            #由於答案有大小寫，但是答案集都是小寫，為了比較兩者得出是否字母正確、位置正確 => 一律轉成小寫比較
-            lower_letter_word_to_guess = WORD_TO_GUESS.lower()
-            
-            #info 可以知道字母、位置是否正確，但忽略大小寫是否正確
-            #info 也可以在後續排除機率低的答案 
-            info = calculate_pattern(lower_letter_guess_word, lower_letter_word_to_guess) 
-
-            #tmp_alpha_dic 作為此輪大小寫的提示 
-            tmp_alpha_key = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
-            # tmp_alpha_val = list(copy.copy(alpha_dic.values()))
-            tmp_alpha_val = list(alpha_dic.values()).copy()
-            tmp_alpha_dic = dict(zip(tmp_alpha_key, tmp_alpha_val))
-
-            '''
-                guess_word實際要猜的word 
-                Step1 和 Steps在做guess_word的前處理(決定大小寫)
-            '''
+            # guess_word 實際要猜的word
             guess_word = list(lower_letter_guess_word)
-            stored_idx = []
-            
-            #Step1 確定目前index的字母是否和fixed answer中的字母一樣，若一樣就直接參考fixed answer中的大小寫
+
+            # 查alpha_dictionary，來決定大小寫
             for i in range(7):
-                if(guess_word[i] == fixed_ans[i]): #小寫
-                    key = guess_word[i]
-                    stored_idx.append(i)
-                    if(tmp_alpha_dic[key]>0):
-                        tmp_alpha_dic[key]-=1
+                # key = lower_letter_guess_word[i]
+                key = guess_word[i]
+                if type(fixed_ans[i]) == type('str'):
+                    if alpha_dic[key] == 1:  # 大寫
+                        # fixed_ans[i] = lower_letter_guess_word[i].upper()
+                        fixed_ans[i] = guess_word[i].upper()
+                    # else: fixed_ans[i] = lower_letter_guess_word[i]#小寫
+                    else:
+                        fixed_ans[i] = guess_word[i]  # 小寫
 
-                elif(guess_word[i].upper() == fixed_ans[i]):
-                    guess_word[i] = guess_word[i].upper()    
-                    key = guess_word[i]
-                    stored_idx.append(i)
-                    if(tmp_alpha_dic[key]>0):
-                        tmp_alpha_dic[key]-=1
-            stored_idx = list(set(stored_idx))
-            
-            #Step2 :基於tmp_alpha_dic,來處理其他不確定大小寫字母的部份(不在stored_idx裏面的inedex)
-                    #情況一： 大寫數量= 0 小寫數量> 0 =>小寫 =>原本就是小寫不用改
-                    #情況二： 大寫數量> 0 小寫數量= 0 => 大寫 
-                    #情況三： 大寫數量> 0 小寫數量> 0
-                    #情況四：大寫數量= 0 小寫數量= 0 => 大小寫隨機
-            full_range = [i for i in range(7)]
-            sub_range = [i for i in full_range if i not in stored_idx]
-            for i in sub_range:
-                upper_key = guess_word[i].upper()
-                lower_key = guess_word[i]
-                random_list =[upper_key,lower_key]
-                if (int(tmp_alpha_dic[upper_key]) == 0) and (int(tmp_alpha_dic[lower_key]) > 0): #情況一
-                    #guess_word[i]=guess_word[i]
-                    tmp_alpha_dic[lower_key]-=1
-                elif (int(tmp_alpha_dic[upper_key]) > 0) and (int(tmp_alpha_dic[lower_key]) == 0): #情況二
-                    guess_word[i]=guess_word[i].upper()
-                    tmp_alpha_dic[upper_key]-=1
-                elif (int(tmp_alpha_dic[upper_key]) > 0) and (int(tmp_alpha_dic[lower_key]) > 0): #情況三
-                    guess_word[i] = random.choice(random_list)
-                    key = guess_word[i]
-                    tmp_alpha_dic[key]-=1
-                elif (int(tmp_alpha_dic[upper_key]) == 0) and (int(tmp_alpha_dic[lower_key]) == 0): #情況四
-                    guess_word[i] = str(random.choice(random_list))
-
-            '''guess_word_lst = []
-            keys_lst = list(fixed_ans.keys())
+            guess_word_lst = []
+            # keys_lst = list(fixed_ans.keys())
             for idx in range(7):
-                # 位置對，字母也對 -> type=='byte'
-                if type(fixed_ans[keys_lst[idx]])==type('str'.encode()): 
-                    guess_word_lst.append(fixed_ans[keys_lst[idx]].decode())
-                #
-                else: guess_word_lst.append(fixed_ans[keys_lst[idx]])
+                # if type(fixed_ans[keys_lst[idx]])==type('str'.encode()): # 位置對，字母也對 -> type=='byte'
+                if type(fixed_ans[idx]) == type('str'.encode()):  # 位置對，字母也對 -> type=='byte'
+                    guess_word_lst.append(fixed_ans[idx].decode())
+                else:
+                    guess_word_lst.append(fixed_ans[idx])
             guess_word = "".join(guess_word_lst)
-            '''
-            p_guess_word = "".join(guess_word)
-            #記錄本次答題 
-            g.append(p_guess_word)
-            #確認本次答題後，再重新評價
+
+            # 紀錄本次答題
+            g.append(guess_word)
+
+            # 確認本次答題後，再重新評價
             feedback = compare2words(WORD_TO_GUESS, guess_word)
-            #記錄本次評價
+            info = list(feedback)
+            for i in range(7):
+                if info[i] == 4:
+                    info[i] = 2
+                elif info[i] == 3:
+                    info[i] = 1
+            info = tuple(info)
+
+            # 紀錄本次評價
             tmp_feedback = list(feedback)
             t.append(tmp_feedback)
 
-            #count_alpha_dic記錄本次猜測字母出現的次數
-            count_alpha_value = [0]*52
-            count_alpha_key = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
-            count_alpha_dic = dict(zip(count_alpha_key, count_alpha_value))
-            #更新fixed_ans 以及 計算字母出現的次數
-            for i in range(7):
-                if feedback[i] == 1: 
-                    fixed_ans[i] = guess_word[i].encode()
-                    key = guess_word[i]
-                    count_alpha_dic[key]+=1 
-                elif feedback[i] == 3: 
-                    if(guess_word[i].islower()): #小寫->大寫
-                        fixed_ans[i] = guess_word[i].upper().encode()
-                        key = guess_word[i].upper()
-                        count_alpha_dic[key]+=1
-                    else: #大小->小寫
-                        fixed_ans[i] = guess_word[i].lower().encode()
-                        key = guess_word[i].lower()
-                        count_alpha_dic[key]+=1
-                elif feedback[i] == 2:
-                    key = guess_word[i]
-                    count_alpha_dic[key]+=1
-                elif feedback[i] == 4:
-                    if(guess_word[i].islower()): #小寫->大寫
-                        key = guess_word[i].upper()
-                        count_alpha_dic[key]+=1
-                    else: #大小->小寫
-                        key = guess_word[i].lower()
-                        count_alpha_dic[key]+=1              
-
-            #如果count_alpha_dic[idx]的次數 >alpha_dic[idx]的次數 => 更新次數 
-            for i in alpha_key:
-                if int(count_alpha_dic[i]) > int(alpha_dic[i]):
-                    alpha_dic[i] = count_alpha_dic[i]
-            
-            if p_guess_word == WORD_TO_GUESS:
-                print(WORD_TO_GUESS, file=f) # 先印正確答案
-                for i in range(n_round): # 印猜的過程
-                    times = str(i+1)
+            if guess_word == WORD_TO_GUESS:
+                print(WORD_TO_GUESS, file=f)  # 先印正確答案
+                for i in range(n_round):  # 印猜的過程
+                    times = str(i + 1)
                     print(times + '; ' + g[i] + '; "', end="", file=f)
                     print(*t[i], sep=",", end="", file=f)
                     print('"', file=f)
-                print(n_round, file=f) # 印猜了幾次
+                print(n_round, file=f)  # 印猜了幾次
                 break
 
-            
-            #test
+            # 更新字母大小寫
+            seen = []
+            for i in range(7):
+                # 大小寫錯
+                if feedback[i] == 4:
+                    key = guess_word[i].lower()
+                    # 小寫改大寫
+                    if (alpha_dic[key] == 0) or key in seen:
+                        alpha_dic[key] = 1
+                        seen.append(key)
+                    # 大寫改小寫
+                    else:
+                        alpha_dic[key] = 0
+                elif feedback[i] == 3 and guess_word[i].isupper():
+                    fixed_ans[i] = guess_word[i].lower().encode()
+                elif feedback[i] == 3 and guess_word[i].islower():
+                    fixed_ans[i] = guess_word[i].upper().encode()
+                elif feedback[i] == 1:
+                    fixed_ans[i] = guess_word[i].encode()
+
+            '''test
             print(n_round)
-            print(p_guess_word)
+            print(guess_word)
             print(f'feedback: {feedback}')
-            
-            
+            '''
+
             # 剔除那些不可能的答案
-            words = pattern_dict[lower_letter_guess_word][info]
-            all_words = all_words.intersection(words) #intersection() 方法用於返回两个或更多集合中都包含的元素
+            # words = pattern_dict[lower_letter_guess_word][info]
+            words = pattern_dict[guess_word.lower()][info]
+            all_words = all_words.intersection(words)  # intersection() 方法用於返回两个或更多集合中都包含的元素
     f.close()
+
+
 if __name__ == "__main__":
     main()
