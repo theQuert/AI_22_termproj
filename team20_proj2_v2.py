@@ -164,7 +164,6 @@ def main():
 
         for n_round in range(init_round, len(all_dictionary)):  # 最多猜完整個答案集 我們要猜到為止
 
-            # all_words = all_words.intersection(set(all_dictionary))
             entropies = calculate_entropies(all_words, pattern_dict)
 
             # Choose the one with highest entropy
