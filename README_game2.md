@@ -8,7 +8,7 @@
 - 運行主程式
 
 ```BASH
-rm ./pattern_dic_2.p
+rm ./pattern_dict_2.p
 python3 team20_2.py tests2.txt ques.txt team20.txt 
 ```
 
