@@ -2,8 +2,8 @@
 
 ### 第二戰
 - `team20_game2.py`: 主程式
-- `sampled71.txt` / `game2list1.txt` / `game2list2.txt`: 答案集(以下以`ans.txt`稱)`
-- 助教出的題目 (以下以`ques.txt`)
+- `sampled71.txt` / `game2list1.txt` / `game2list2.txt`: 答案集(以下以`ans.txt`表示)
+- 助教出的題目 (以下以`ques.txt`表示)
 - `team20_second.txt`:  答覆紀錄
 - 運行
 
