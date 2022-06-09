@@ -92,12 +92,12 @@ def main():
     # 將猜測結果寫入檔案 team20_third.txt
     f = open(sys.argv[2], 'w')
 
-    if 'pattern_dict_3.p' in os.listdir('.'):
-        pattern_dict = pickle.load(open('pattern_dict_3.p', 'rb'))
+    # if 'pattern_dict_3.p' in os.listdir('.'):
+    #     pattern_dict = pickle.load(open('pattern_dict_3.p', 'rb'))
 
-    else:
-        pattern_dict = generate_pattern_dict(all_dictionary)
-        pickle.dump(pattern_dict, open('pattern_dict_3.p', 'wb+'))
+    # else:
+    pattern_dict = generate_pattern_dict(all_dictionary)
+    pickle.dump(pattern_dict, open('pattern_dict_3.p', 'wb+'))
 
     while 1:
         all_words = set(all_dictionary)

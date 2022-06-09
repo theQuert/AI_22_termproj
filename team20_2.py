@@ -139,12 +139,12 @@ def main():
     # 將猜測結果寫入檔案 team20_second.txt
     f = open(sys.argv[3], 'w')
 
-    if 'pattern_dict_.p' in os.listdir('.'):
-        pattern_dict = pickle.load(open('pattern_dict_2.p', 'rb'))
+    # if 'pattern_dict_.p' in os.listdir('.'):
+    #     pattern_dict = pickle.load(open('pattern_dict_2.p', 'rb'))
 
-    else:
-        pattern_dict = generate_pattern_dict(all_dictionary)
-        pickle.dump(pattern_dict, open('pattern_dict_2.p', 'wb+'))
+    # else:
+    pattern_dict = generate_pattern_dict(all_dictionary)
+    pickle.dump(pattern_dict, open('pattern_dict_2.p', 'wb+'))
 
     for WORD_TO_GUESS in dictionary:
         all_words = set(all_dictionary)
