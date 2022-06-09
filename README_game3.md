@@ -2,16 +2,16 @@
 
 ### 第三戰
 - `team20_3.py`: 主程式
-- `sampled71.txt` / `game2list1.txt` / `game2list2.txt`: 答案集(以下以`tests3.txt`表示)
-- `team20.txt`:  答覆紀錄
+- `sampled71.txt`答案集
+- `team20_3.txt`:  答覆紀錄
 - 運行主程式
 
 ```BASH
 rm ./pattern_dict_3.p
-python3 team20_3.py tests3.txt team20.txt
+python3 team20_3.py sampled71.txt team20_3.txt
 ```
 
-最後，答覆紀錄(`team20.txt`)內包含有**正確答案**, **當輪猜測的詞**, **當輪回覆的評價** 以及 **共猜了幾次**
+最後，答覆紀錄(`team20_3.txt`)內包含有**正確答案**, **當輪猜測的詞**, **當輪回覆的評價** 以及 **共猜了幾次**
 
 #### 備註：
 - 程式當猜對當前詞後，會直接再運行下次的input提供輸入，欲離開程式需 *ctrl+c*, 
