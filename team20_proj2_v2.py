@@ -26,7 +26,7 @@ def calculate_pattern(guess, true):
     counts = Counter(true[i] for i in wrong)
 
     # 預設每個字母都猜對
-    pattern = [1] * WORD_LEN  # 建立 1*5 的list [1,1,1,1,1]
+    pattern = [1] * WORD_LEN  # 建立 1*7 的list [1,1,1,1,1,1,1]
     for i in wrong:
         v = guess[i]  # 從 wrong 紀錄的位置 refer 該位置我們猜甚麼字母
         if counts[v] > 0:  # 查詢我們猜的字母是否有在正確 word 裏面 有(代表錯位)，則counts[v] > 0, othersie counts[v] = 0 (表示沒猜中)
@@ -122,28 +122,28 @@ def compare2words(ans, guess):
 def main():
     # 接收三個參數。
 
-    # 第一個參數是答案集合的檔案名稱，也就是 wordle-answers-alphabetical.txt
+    # 第一個參數是答案集合的檔案名稱，也就是 ans.txt
     # sys.argv[1]
     # Load 所有可能解，我們只考慮答案庫裡的所有單字
     with open(sys.argv[1]) as ifp:
         all_dictionary = list(map(lambda x: x.strip(), ifp.readlines()))
 
-    # 第二個參數是助教出的題目的檔案名稱tests.txt
+    # 第二個參數是助教出的題目的檔案名稱 ques.txt
     # sys.argv[2]
     # Load 助教出的題目(我們要猜的 word)
     with open(sys.argv[2]) as ifp:
         dictionary = list(map(lambda x: x.strip(), ifp.readlines()))
 
-    # 第三個參數是各組程式針對tests.txt所做的答覆的紀錄的檔案名稱
+    # 第三個參數是各組程式針對team20_second.txt所做的答覆的紀錄的檔案名稱
     # sys.argv[3]
-    # 將猜測結果寫入檔案 team20_first.txt
+    # 將猜測結果寫入檔案 team20_second.txt
     f = open(sys.argv[3], 'w')
 
     if 'pattern_dict_.p' in os.listdir('.'):
         pattern_dict = pickle.load(open('pattern_dict_2.p', 'rb'))
 
     else:
-        pattern_dict = generate_pattern_dict(all_dictionary)  # costs 2 min.
+        pattern_dict = generate_pattern_dict(all_dictionary)
         pickle.dump(pattern_dict, open('pattern_dict_2.p', 'wb+'))
 
     for WORD_TO_GUESS in dictionary:
@@ -250,7 +250,7 @@ def main():
             # 剔除那些不可能的答案
             # words = pattern_dict[lower_letter_guess_word][info]
             words = pattern_dict[guess_word.lower()][info]
-            all_words = all_words.intersection(words)  # intersection() 方法用於返回两个或更多集合中都包含的元素
+            all_words = all_words.intersection(words)  # intersection() 方法用於返回兩個或更多集合中都包含的元素
     f.close()
 
 
